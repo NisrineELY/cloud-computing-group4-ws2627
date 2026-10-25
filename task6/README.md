@@ -44,17 +44,25 @@ Overview webcams ──> Detection (Task 2, Pi 5) ──> task6 controller (Pyth
 
 ## Setup
 
-_TODO: wiring diagram, firmware flashing steps, Python environment setup._
+- Firmware: `firmware/task6_pan_tilt/` (Arduino IDE 2, ESP32 core 3.x, board *ESP32C6 Dev Module*)
+- Controller: `pip install -r pi/requirements.txt`
+- Wiring and first lab test: see [docs/lab-session-prep.md](docs/lab-session-prep.md)
+- Protocol: see [docs/serial-protocol.md](docs/serial-protocol.md)
 
 ## How to run
 
-_TODO_
+```bash
+python pi/task6_cli.py --sim --selftest          # no hardware: simulator self-test
+python pi/task6_cli.py --list                    # list serial ports
+python pi/task6_cli.py --port COM5               # interactive console
+python pi/task6_cli.py --port COM5 --selftest    # hardware self-test, log in docs/test-logs/
+```
 
 ## Status
 
 - [ ] Hardware ordered
-- [ ] Firmware: servo sweep
-- [ ] Firmware: serial commands (pan, tilt, laser on/off)
-- [ ] Safety: tilt limit + watchdog
-- [ ] Pi controller: send commands over serial
+- [x] Firmware written: servo control, serial commands, laser on/off (compiles for ESP32-C6, not yet tested on hardware)
+- [x] Safety in firmware: tilt limit + watchdog (not yet tested on hardware)
+- [x] Controller console with simulator and self-test
+- [ ] First hardware test in the lab
 - [ ] Calibration and pointing-accuracy measurement
