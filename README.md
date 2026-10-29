@@ -19,3 +19,15 @@ Zusammenarbeit im Team und GitHub-Richtlinien
 5. Stimmt Schnittstellen frühzeitig ab. Klärt gemeinsame Details wie das Format von Erkennungsereignissen, API-Endpunkte, Nachrichten-Topics und Speicherorte. Dadurch können wir die Komponenten für Kameras, Erkennung, Backend, Monitoring und Tracking leichter miteinander verbinden.
 6. Haltet große Dateien und Zugangsdaten aus Git heraus. Committet keine Passwörter, Tokens, Datensätze, Videos oder großen Modelldateien. Nutzt dafür vereinbarte Speicherorte und dokumentiert den Zugriff. Stellt Beispielkonfigurationen ohne echte Zugangsdaten bereit.
 7. Integriert und testet regelmäßig. Beginnt mit einer kleinen, funktionsfähigen Version eurer Komponente und verbindet sie frühzeitig mit den anderen Komponenten. Speichert Testergebnisse und Messwerte, damit wir sie für die Auswertung und die Abschlusspräsentation verwenden können.
+========================================================================================================================================================================================
+## Team & Tasks
+
+| Task | Owner | Backup |
+|------|-------|--------|
+| 1 – Sensor node & cameras | Nisrine | Wiame |
+| 2 – Drone detection (AI) | Wiame | Nisrine |
+| 3 – Backend & communication | Harsh | Tomer |
+| 4 – Monitoring & Telegram bot | Sanita | |
+| 5 – HPL & MPI | shelly | |
+| 6 – Pan-tilt camera | Tomer | |
+| 7 – Documentation & presentation | Everyone for their own part | |
