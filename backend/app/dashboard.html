@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Group 4 Drone Detections</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 2rem; background: #f7f8fa; color: #182333; }
+    main { max-width: 1100px; margin: auto; }
+    header { display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
+    input, button { font: inherit; padding: .6rem; }
+    table { width: 100%; background: white; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: .8rem; border-bottom: 1px solid #ddd; text-align: left; }
+    img { max-width: 110px; max-height: 80px; }
+    .scroll { overflow-x: auto; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Drone Detection Dashboard</h1>
+  <header>
+    <label>API key <input id="key" type="password" autocomplete="off"></label>
+    <button id="refresh" type="button">Load detections</button>
+    <span id="status">Enter your API key to view events.</span>
+  </header>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>Time</th><th>Camera</th><th>Type</th><th>Confidence</th><th>Tracking</th><th>Media</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+</main>
+<script>
+const rows = document.getElementById('rows');
+const statusEl = document.getElementById('status');
+let mediaUrls = [];
+function cell(row, value) {
+  const td = document.createElement('td');
+  td.textContent = value == null ? '' : String(value);
+  row.append(td);
+  return td;
+}
+async function refresh() {
+  const key = document.getElementById('key').value;
+  for (const url of mediaUrls) URL.revokeObjectURL(url);
+  mediaUrls = [];
+  rows.replaceChildren();
+  statusEl.textContent = 'Loading...';
+  try {
+    const headers = {'X-API-Key': key};
+    const response = await fetch('/detections', {headers});
+    if (!response.ok) throw new Error(`API returned ${response.status}`);
+    const events = await response.json();
+    for (const event of events) {
+      const tr = document.createElement('tr');
+      cell(tr, new Date(event.detected_at).toLocaleString());
+      cell(tr, event.camera_id);
+      cell(tr, event.object_type);
+      cell(tr, Number(event.confidence).toFixed(3));
+      cell(tr, event.tracking_id);
+      const mediaCell = cell(tr, '');
+      if (event.image_path) {
+        const response = await fetch(`/detections/${encodeURIComponent(event.event_id)}/media`, {headers});
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          mediaUrls.push(url);
+          if (blob.type.startsWith('image/')) {
+            const img = document.createElement('img');
+            img.src = url;
+            img.alt = 'Detection image';
+            mediaCell.append(img);
+          } else {
+            const link = document.createElement('a');
+            link.href = url;
+            link.textContent = 'View video';
+            link.target = '_blank';
+            link.rel = 'noopener';
+            mediaCell.append(link);
+          }
+        }
+      }
+      rows.append(tr);
+    }
+    statusEl.textContent = `${events.length} detection(s) loaded`;
+  } catch (error) {
+    statusEl.textContent = error.message;
+  }
+}
+document.getElementById('refresh').addEventListener('click', refresh);
+</script>
+</body>
+</html>
