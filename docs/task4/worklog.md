@@ -41,7 +41,7 @@ Owner: Sanita Nusrath Soma
 
 ### Completed
 
-- Gained SSH access to backend Raspberry Pi through Tailscale
+- Connected to Raspberry Pi through Tailscale
 - Verified backend services:
   - drone-api
   - drone-worker
@@ -52,19 +52,34 @@ Owner: Sanita Nusrath Soma
 - Verified metrics endpoint on port 9100
 - Installed Prometheus
 - Configured Prometheus scraping
-- Fixed scrape target configuration
-- Verified target status is UP
+- Verified target health is UP
+- Installed Grafana
+- Connected Grafana to Prometheus
+- Imported Node Exporter Full dashboard
+
+### Results
+
+Successfully visualized:
+
+- CPU usage
+- Memory usage
+- Disk utilization
+- Network traffic
+- System uptime
 
 ### Evidence
 
-- Screenshot of Docker containers
-- Screenshot of Prometheus target health
+- prometheus-target-up.png
+- grafana-prometheus-connected.png
+- node-exporter-dashboard.png
 
 ### Next Steps
 
-- Install Grafana
-- Connect Grafana to Prometheus
-- Build Infrastructure Dashboard
+- Docker container monitoring
+- RabbitMQ monitoring
+- PostgreSQL monitoring
+- Telegram alerts
+- Failure testing
 
 ## YYYY-MM-DD
 
