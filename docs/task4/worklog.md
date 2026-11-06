@@ -37,6 +37,34 @@ Owner: Sanita Nusrath Soma
 - Design Grafana dashboard layout
 
 ---
+## 2026-11-06
+
+### Completed
+
+- Gained SSH access to backend Raspberry Pi through Tailscale
+- Verified backend services:
+  - drone-api
+  - drone-worker
+  - drone-postgres
+  - drone-rabbitmq
+  - drone-seaweedfs
+- Installed Node Exporter
+- Verified metrics endpoint on port 9100
+- Installed Prometheus
+- Configured Prometheus scraping
+- Fixed scrape target configuration
+- Verified target status is UP
+
+### Evidence
+
+- Screenshot of Docker containers
+- Screenshot of Prometheus target health
+
+### Next Steps
+
+- Install Grafana
+- Connect Grafana to Prometheus
+- Build Infrastructure Dashboard
 
 ## YYYY-MM-DD
 
