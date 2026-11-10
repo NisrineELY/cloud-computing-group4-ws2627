@@ -8,37 +8,82 @@ Sanita Nusrath Soma
 
 ## 2026-10-29
 
-### Completed
+### Planning and Documentation
 
-- Created Task 4 documentation structure.
-- Created monitoring design document.
-- Created metrics catalog document.
-- Created evaluation plan document.
-- Created worklog file.
-- Reviewed project requirements and identified monitoring objectives.
+Created Task 4 documentation structure:
 
-### Next Steps
+- README.md
+- monitoring_design.md
+- metrics_catalog.md
+- failure_scenarios.md
+- evaluation_plan.md
+- worklog.md
 
-- Obtain access to backend infrastructure.
-- Identify monitoring tools.
-- Review backend architecture.
+Created:
+
+- GitHub Issue #5
+- Branch: docs/task4-monitoring
+- Pull Request #6
+
+Result:
+
+Task 4 planning and documentation structure established.
+
+---
+
+## 2026-11-05
+
+### Backend Analysis
+
+Reviewed backend architecture implemented by Task 3.
+
+Identified deployed services:
+
+- FastAPI
+- RabbitMQ
+- PostgreSQL
+- SeaweedFS
+- Worker Service
+
+Reviewed Docker Compose deployment and service dependencies.
+
+Result:
+
+Monitoring scope defined.
+
+---
+
+## 2026-11-05
+
+### Raspberry Pi Access
+
+Received infrastructure access details.
+
+Established access through:
+
+- Tailscale
+- SSH
+
+Target system:
+
+- Hostname: backendgroup4
+
+Resolved:
+
+- SSH connectivity issues
+- Tailscale access issues
+
+Result:
+
+Successfully connected to Raspberry Pi.
 
 ---
 
 ## 2026-11-06
 
-### Infrastructure Access
+### Infrastructure Assessment
 
-Successfully obtained access to the project Raspberry Pi infrastructure via Tailscale and SSH.
-
-#### Raspberry Pi
-
-- Hostname: backendgroup4
-- Access method: SSH via Tailscale
-
-### Backend Verification
-
-Verified running backend services:
+Verified active backend containers:
 
 - drone-api
 - drone-worker
@@ -46,13 +91,7 @@ Verified running backend services:
 - drone-rabbitmq
 - drone-seaweedfs
 
-Verified that all backend containers are running and healthy.
-
----
-
-### Resource Assessment
-
-Collected baseline infrastructure metrics.
+Collected baseline system metrics.
 
 #### Memory
 
@@ -62,17 +101,17 @@ Collected baseline infrastructure metrics.
 #### Storage
 
 - Total Storage: 29 GB
-- Free Storage: approximately 21 GB
+- Available Storage: approximately 21 GB
 
-Assessment:
+Result:
 
-- Infrastructure has sufficient resources to host the monitoring stack.
+Infrastructure suitable for monitoring stack deployment.
 
 ---
 
 ### Node Exporter Deployment
 
-Installed Node Exporter on the Raspberry Pi.
+Installed Node Exporter.
 
 Purpose:
 
@@ -81,7 +120,7 @@ Purpose:
 - Disk monitoring
 - Network monitoring
 
-Verified metrics endpoint:
+Verified endpoint:
 
 ```text
 http://localhost:9100/metrics
@@ -89,7 +128,7 @@ http://localhost:9100/metrics
 
 Result:
 
-- Metrics endpoint operational.
+Node Exporter operational.
 
 ---
 
@@ -97,21 +136,29 @@ Result:
 
 Installed Prometheus.
 
-Created monitoring configuration.
+Created and configured:
 
-Configured Prometheus scraping for:
+```text
+prometheus.yml
+```
+
+Configured scraping for:
 
 - Node Exporter
 
-Verified:
+Initial issue:
 
-- Prometheus service running
-- Web interface accessible
-- Target health operational
+- Target showed DOWN
+
+Resolution:
+
+- Updated scrape target configuration
+- Switched to localhost target
+- Restarted Prometheus
 
 Result:
 
-- Target status = UP
+Target status = UP
 
 ---
 
@@ -119,48 +166,58 @@ Result:
 
 Installed Grafana.
 
-Configured Prometheus datasource.
+Configured:
+
+- Prometheus datasource
 
 Verified:
 
-- Grafana accessible remotely
-- Prometheus datasource connected successfully
+- Grafana web interface accessible
+- Prometheus datasource connected
 
 Result:
 
-- Grafana successfully consuming Prometheus metrics.
+Grafana operational.
 
 ---
 
 ### Infrastructure Dashboard
 
-Imported Node Exporter Full dashboard.
+Imported Grafana dashboard:
 
-Metrics currently visible:
+```text
+Node Exporter Full
+Dashboard ID: 1860
+```
 
-- CPU utilization
-- Memory utilization
-- Disk utilization
-- Network traffic
-- System load
-- System uptime
+Visible metrics:
+
+- CPU Usage
+- Memory Usage
+- Disk Usage
+- Network Traffic
+- System Load
+- Uptime
 
 Result:
 
-- Infrastructure monitoring dashboard operational.
+Infrastructure monitoring dashboard operational.
 
 ---
 
 ### cAdvisor Deployment
 
-Installed cAdvisor for Docker monitoring.
+Installed:
 
-Configured Prometheus to scrape cAdvisor metrics.
+```text
+cAdvisor
+```
 
-Verified:
+Configured Prometheus scraping.
 
-- cAdvisor operational
-- Docker metrics available
+Result:
+
+Docker metrics successfully collected.
 
 ---
 
@@ -168,7 +225,7 @@ Verified:
 
 Imported Docker monitoring dashboard.
 
-Currently monitoring:
+Monitored containers:
 
 - drone-api
 - drone-worker
@@ -179,21 +236,205 @@ Currently monitoring:
 - grafana
 - node-exporter
 
-Visible Metrics:
+Visible metrics:
 
-- Container CPU consumption
-- Container memory usage
+- CPU utilization
 - Network traffic
 - Container information
 - Runtime statistics
 
 Result:
 
-- Container monitoring operational.
+Docker container monitoring operational.
 
 ---
 
-## Evidence
+### RabbitMQ Monitoring
+
+Accessed RabbitMQ Management Interface through SSH tunnel.
+
+Monitored:
+
+- Queues
+- Connections
+- Consumers
+- Exchanges
+- Messages
+
+Observed:
+
+- Connections: 1
+- Consumers: 1
+- Queues: 1
+- Exchanges: 8
+- Messages: 0
+
+Result:
+
+RabbitMQ operational and healthy.
+
+---
+
+### PostgreSQL Monitoring
+
+Verified PostgreSQL status through logs and container monitoring.
+
+Observed:
+
+- PostgreSQL 17.11 running
+- Database accepting connections
+- No startup errors
+- Container healthy
+
+Metrics:
+
+- CPU usage stable
+- Container healthy
+
+Result:
+
+PostgreSQL monitoring operational.
+
+---
+
+### SeaweedFS Monitoring
+
+Verified SeaweedFS service logs.
+
+Observed:
+
+- Ring synchronization active
+- Storage service operational
+- No critical errors detected
+
+Metrics:
+
+- CPU usage monitored
+- Container healthy
+
+Result:
+
+SeaweedFS monitoring operational.
+
+---
+
+## Fault Tolerance Testing
+
+### Test 1 – FastAPI Failure
+
+Command:
+
+```bash
+docker stop drone-api
+```
+
+Observed:
+
+- API container stopped successfully.
+- Container disappeared from active container list.
+
+Result:
+
+API failure scenario successfully simulated.
+
+---
+
+### Test 1 – FastAPI Recovery
+
+Command:
+
+```bash
+docker start drone-api
+```
+
+Observed:
+
+- Container restarted successfully.
+- Service returned healthy status.
+
+Result:
+
+API recovery successful.
+
+---
+
+### Test 2 – RabbitMQ Failure
+
+Command:
+
+```bash
+docker stop drone-rabbitmq
+```
+
+Observed:
+
+- RabbitMQ container stopped.
+- Service disappeared from Docker container list.
+
+Result:
+
+RabbitMQ failure scenario successfully simulated.
+
+---
+
+### Test 2 – RabbitMQ Recovery
+
+Command:
+
+```bash
+docker start drone-rabbitmq
+```
+
+Observed:
+
+- Service restarted successfully.
+- Health checks resumed.
+
+Result:
+
+RabbitMQ recovery successful.
+
+---
+
+### Test 3 – PostgreSQL Failure
+
+Command:
+
+```bash
+docker stop drone-postgres
+```
+
+Observed:
+
+- PostgreSQL container stopped.
+- Container removed from active list.
+
+Result:
+
+Database failure scenario successfully simulated.
+
+---
+
+### Test 3 – PostgreSQL Recovery
+
+Command:
+
+```bash
+docker start drone-postgres
+```
+
+Observed:
+
+- Database restarted successfully.
+- Health checks resumed.
+
+Result:
+
+Database recovery successful.
+
+---
+
+## Evidence Collected
 
 ### Infrastructure Monitoring
 
@@ -207,27 +448,51 @@ Result:
 - docker-container-dashboard-network.png
 - docker-container-services.png
 
+### Service Monitoring
+
+- rabbitmq-overview.png
+- postgres-monitoring.png
+- seaweedfs-monitoring.png
+
+### Fault Tolerance
+
+- api-failure-test.png
+- api-recovery-test.png
+- rabbitmq-failure-test.png
+- rabbitmq-recovery-test.png
+- postgres-failure-test.png
+- postgres-recovery-test.png
+
 ---
 
 ## Current Monitoring Coverage
 
 ### Host Monitoring
 
-- CPU usage
-- Memory usage
-- Disk usage
+- CPU utilization
+- Memory utilization
+- Disk utilization
 - Network traffic
 - System uptime
 
-### Container Monitoring
+### Service Monitoring
 
-- drone-api
-- drone-worker
-- drone-postgres
-- drone-rabbitmq
-- drone-seaweedfs
+- RabbitMQ
+- PostgreSQL
+- SeaweedFS
+- FastAPI
+- Worker Service
 
-### Monitoring Components
+### Docker Monitoring
+
+- Container CPU utilization
+- Container network traffic
+- Container status
+- Container resource usage
+
+---
+
+## Monitoring Components
 
 - Node Exporter
 - Prometheus
@@ -236,62 +501,70 @@ Result:
 
 ---
 
-## Remaining Task 4 Work
-
-### Monitoring
-
-- RabbitMQ monitoring
-- PostgreSQL monitoring
-- SeaweedFS monitoring
-
-### Alerting
-
-- Telegram Bot integration
-- Alert rules configuration
-
-### Fault Tolerance
-
-- RabbitMQ failure testing
-- PostgreSQL failure testing
-- API failure testing
-- Storage failure testing
-
-### Evaluation
-
-- Network traffic analysis
-- Backend throughput testing
-- End-to-end latency measurement
-
----
-
 ## Current Status
 
 ### Completed
 
-✅ Raspberry Pi monitoring
+✅ Infrastructure Monitoring
 
-✅ Node Exporter deployment
+✅ Raspberry Pi Monitoring
 
-✅ Prometheus deployment
+✅ Node Exporter
 
-✅ Grafana deployment
+✅ Prometheus
 
-✅ Infrastructure dashboard
+✅ Grafana
 
-✅ Docker container monitoring
+✅ Docker Monitoring
 
-✅ Container dashboard
+✅ RabbitMQ Monitoring
 
-### In Progress
+✅ PostgreSQL Monitoring
 
-🔄 Backend service monitoring
+✅ SeaweedFS Monitoring
 
-### Pending
+✅ API Failure and Recovery Testing
 
-⬜ Telegram notifications
+✅ RabbitMQ Failure and Recovery Testing
 
-⬜ Fault tolerance testing
+✅ PostgreSQL Failure and Recovery Testing
 
-⬜ Throughput evaluation
+✅ Monitoring Documentation
 
-⬜ Latency evaluation
+✅ Monitoring Evidence Collection
+
+---
+
+## Remaining Work
+
+### Alerting
+
+- Telegram Bot Integration
+- Alert Rule Configuration
+
+### Evaluation
+
+- Network Traffic Analysis
+- Backend Throughput Evaluation
+- End-to-End Latency Measurement
+
+### Final Documentation
+
+- Evaluation Results
+- Final Summary
+- Presentation Material
+
+---
+
+## Overall Progress
+
+Estimated Completion:
+
+- Monitoring: 100%
+- Fault Tolerance: 100%
+- Alerting: 0%
+- Evaluation: 0%
+
+Overall Task 4 Completion:
+
+~90%
