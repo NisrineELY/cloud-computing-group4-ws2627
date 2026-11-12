@@ -295,3 +295,27 @@ Result:
 ⬜ Throughput evaluation
 
 ⬜ Latency evaluation
+
+### Telegram Alert Integration
+
+Created Telegram Bot using BotFather.
+
+Created monitoring group:
+
+- Group4 Monitoring
+
+Configured Grafana Telegram Contact Point.
+
+Obtained Chat ID and Bot Token.
+
+Verified:
+
+- Telegram API connectivity
+- Alert delivery
+- Grafana notification routing
+
+Result:
+
+Telegram alerting operational.
+
+Example alert successfully delivered to Telegram group.
