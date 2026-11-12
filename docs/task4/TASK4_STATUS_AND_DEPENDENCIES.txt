@@ -1,0 +1,368 @@
+==========================================================
+TASK 4 STATUS AND DEPENDENCIES
+==========================================================
+
+Student:
+Sanita Nusrath Soma
+
+Task:
+Task 4 - Monitoring, Fault Tolerance and Evaluation
+
+Last Updated:
+2026-11-12
+
+==========================================================
+WHAT I HAVE COMPLETED
+==========================================================
+
+MONITORING INFRASTRUCTURE
+
+[✓] Raspberry Pi access via Tailscale and SSH
+
+[✓] Installed Node Exporter
+
+[✓] Installed Prometheus
+
+[✓] Installed Grafana
+
+[✓] Installed cAdvisor
+
+[✓] Connected Grafana to Prometheus
+
+[✓] Imported Infrastructure Dashboard
+
+[✓] Imported Docker Monitoring Dashboard
+
+----------------------------------------------------------
+
+INFRASTRUCTURE MONITORING
+
+[✓] CPU utilization monitoring
+
+[✓] Memory utilization monitoring
+
+[✓] Disk utilization monitoring
+
+[✓] Network traffic monitoring
+
+[✓] System uptime monitoring
+
+[✓] Storage monitoring
+
+----------------------------------------------------------
+
+SERVICE MONITORING
+
+[✓] RabbitMQ monitoring
+
+[✓] PostgreSQL monitoring
+
+[✓] SeaweedFS monitoring
+
+[✓] FastAPI monitoring
+
+[✓] Worker monitoring
+
+----------------------------------------------------------
+
+DOCKER MONITORING
+
+[✓] Container CPU monitoring
+
+[✓] Container memory monitoring
+
+[✓] Container network monitoring
+
+[✓] Container health monitoring
+
+Monitored Containers:
+
+- drone-api
+- drone-worker
+- drone-postgres
+- drone-rabbitmq
+- drone-seaweedfs
+- grafana
+- prometheus
+- node-exporter
+- cadvisor
+
+----------------------------------------------------------
+
+FAULT TOLERANCE
+
+[✓] API failure test
+
+[✓] API recovery test
+
+[✓] RabbitMQ failure test
+
+[✓] RabbitMQ recovery test
+
+[✓] PostgreSQL failure test
+
+[✓] PostgreSQL recovery test
+
+----------------------------------------------------------
+
+ALERTING
+
+[✓] Telegram bot created
+
+[✓] Telegram group created
+
+[✓] Telegram bot added to group
+
+[✓] Grafana Telegram contact point configured
+
+[✓] Test alert successfully delivered to Telegram
+
+==========================================================
+WHAT IS PARTIALLY COMPLETED
+==========================================================
+
+[~] Sensor node monitoring
+
+Raspberry Pi backend is monitored.
+
+Need confirmation whether actual camera/sensor node
+metrics are exposed and accessible.
+
+----------------------------------------------------------
+
+[~] Network traffic evaluation
+
+Metrics collected.
+
+Need final evaluation and report section.
+
+==========================================================
+WHAT IS STILL MISSING
+==========================================================
+
+END-TO-END LATENCY
+
+Need:
+
+- Event submission timestamp
+- Queue processing timestamp
+- Worker processing timestamp
+- Database persistence timestamp
+- Detection retrieval timestamp
+
+Output Required:
+
+- Average latency
+- Minimum latency
+- Maximum latency
+
+----------------------------------------------------------
+
+THROUGHPUT EVALUATION
+
+Need:
+
+- Messages per second
+- Events per second
+- Worker processing rate
+- Database write rate
+- Queue growth under load
+
+Output Required:
+
+- Throughput measurements
+- Evaluation conclusions
+
+----------------------------------------------------------
+
+DETECTION DASHBOARD REQUIREMENTS
+
+Need:
+
+- Detection records
+- Confidence values
+- Tracking IDs
+- Images
+- Video clips
+- Camera information
+
+==========================================================
+WHAT I NEED FROM TEAMMATES
+==========================================================
+
+FROM TASK 1 / SENSOR TEAM
+
+Please provide:
+
+- Camera information
+- Sensor status information
+- Sample drone detections
+- Images
+- Video clips
+
+Questions:
+
+1. Is sensor status accessible through any API?
+2. How can I obtain camera metrics?
+3. Where are videos and images stored?
+
+----------------------------------------------------------
+
+FROM TASK 2 / DETECTION TEAM
+
+Please provide:
+
+- Confidence scores
+- Tracking IDs
+- Object labels/classes
+- Example detections
+
+Questions:
+
+1. Where are confidence values stored?
+2. Where is tracking information stored?
+3. How can I access tracking IDs?
+
+----------------------------------------------------------
+
+FROM TASK 3 / BACKEND TEAM
+
+Please provide:
+
+- Example POST /events payload
+- Detection generation method
+- Example detections already stored
+- Throughput testing method
+
+Questions:
+
+1. How can I automatically generate detections?
+2. How should throughput be measured?
+3. Are timestamps stored for latency evaluation?
+4. Which API endpoint provides detection statistics?
+
+==========================================================
+HOW TO CONNECT TO THE SYSTEM
+==========================================================
+
+TAILSCALE
+
+Connect using Tailscale account.
+
+Pi Hostname:
+
+backendgroup4
+
+Pi IP:
+
+100.113.207.91
+
+----------------------------------------------------------
+
+SSH
+
+ssh group4@100.113.207.91
+
+----------------------------------------------------------
+
+GRAFANA
+
+http://100.113.207.91:3000
+
+----------------------------------------------------------
+
+PROMETHEUS
+
+http://100.113.207.91:9090
+
+----------------------------------------------------------
+
+CADVISOR
+
+http://100.113.207.91:8080
+
+----------------------------------------------------------
+
+API
+
+https://backendgroup4.tailc88da4.ts.net
+
+API Documentation:
+
+https://backendgroup4.tailc88da4.ts.net/docs
+
+----------------------------------------------------------
+
+RABBITMQ DASHBOARD
+
+Create SSH Tunnel:
+
+ssh -L 15672:127.0.0.1:15672 group4@100.113.207.91
+
+Then open:
+
+http://127.0.0.1:15672
+
+Username:
+
+dronebackend
+
+----------------------------------------------------------
+
+TELEGRAM ALERTS
+
+Telegram Group:
+
+Group4 Monitoring
+
+Status:
+
+Working
+
+Grafana alert tests successfully delivered.
+
+==========================================================
+CURRENT TASK 4 COMPLETION
+==========================================================
+
+Monitoring                  100%
+
+Fault Tolerance             100%
+
+Telegram Notifications      100%
+
+Network Monitoring          90%
+
+End-to-End Latency          0%
+
+Throughput Evaluation       0%
+
+Detection Visualization     20%
+
+----------------------------------------------------------
+
+Overall Estimated Completion
+
+~90-95%
+
+==========================================================
+NEXT PRIORITY TASKS
+==========================================================
+
+1. Get confidence values
+
+2. Get tracking IDs
+
+3. Get sample detections
+
+4. Get images and video clips
+
+5. Measure end-to-end latency
+
+6. Measure throughput
+
+7. Complete final evaluation section
+
+==========================================================
+END
+==========================================================
