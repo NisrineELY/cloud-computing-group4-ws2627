@@ -60,11 +60,15 @@ def run():
             credentials = pika.PlainCredentials(
                 os.environ["RABBITMQ_USER"], os.environ["RABBITMQ_PASSWORD"]
             )
-            connection = pika.BlockingConnection(pika.ConnectionParameters(
-                host="rabbitmq", credentials=credentials,
-                heartbeat=30, blocked_connection_timeout=10,
-                connection_attempts=5, retry_delay=2,
-            ))
+            hosts = os.environ.get("RABBITMQ_HOSTS", "rabbitmq").split(",")
+            connection = pika.BlockingConnection([
+                pika.ConnectionParameters(
+                    host=h.strip(), credentials=credentials,
+                    heartbeat=30, blocked_connection_timeout=10,
+                    connection_attempts=2, retry_delay=2,
+                )
+                for h in hosts
+            ])
             channel = connection.channel()
             channel.queue_declare(queue=QUEUE, durable=True)
             channel.basic_qos(prefetch_count=1)

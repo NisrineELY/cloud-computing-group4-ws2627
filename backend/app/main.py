@@ -90,16 +90,18 @@ def publish_event(event: dict) -> None:
         os.environ["RABBITMQ_PASSWORD"],
     )
 
-    parameters = pika.ConnectionParameters(
-        host="rabbitmq",
-        credentials=credentials,
-        connection_attempts=3,
-        retry_delay=2,
-        blocked_connection_timeout=10,
-        heartbeat=30,
-    )
-
-    connection = pika.BlockingConnection(parameters)
+    hosts = os.environ.get("RABBITMQ_HOSTS", "rabbitmq").split(",")
+    connection = pika.BlockingConnection([
+        pika.ConnectionParameters(
+            host=h.strip(),
+            credentials=credentials,
+            connection_attempts=2,
+            retry_delay=1,
+            blocked_connection_timeout=10,
+            heartbeat=30,
+        )
+        for h in hosts
+    ])
 
     try:
         channel = connection.channel()
