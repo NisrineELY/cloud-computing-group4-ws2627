@@ -1,0 +1,86 @@
+# RabbitMQ 3-node cluster (Docker Swarm). Deploy: docker stack deploy -c rabbitmq.yml mq
+version: "3.8"
+
+x-rabbitmq: &rabbitmq
+  image: rabbitmq:4-management
+  entrypoint:
+    - sh
+    - -c
+    - |
+      for d in /var/lib/rabbitmq /root; do
+        cp /run/secrets/rabbitmq_erlang_cookie $$d/.erlang.cookie
+        chmod 400 $$d/.erlang.cookie
+      done
+      chown rabbitmq:rabbitmq /var/lib/rabbitmq/.erlang.cookie
+      export RABBITMQ_DEFAULT_USER="$$(cat /run/secrets/rabbitmq_user)"
+      export RABBITMQ_DEFAULT_PASS="$$(cat /run/secrets/rabbitmq_password)"
+      exec docker-entrypoint.sh rabbitmq-server
+  secrets: [rabbitmq_erlang_cookie, rabbitmq_user, rabbitmq_password]
+  configs:
+    - source: rabbitmq_cluster_conf
+      target: /etc/rabbitmq/conf.d/20-cluster.conf
+  networks: [drone-net]
+  healthcheck:
+    test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+    interval: 30s
+    timeout: 10s
+    retries: 5
+    start_period: 120s
+
+x-deploy: &deploy
+  endpoint_mode: dnsrr
+  resources:
+    limits:
+      memory: 512M
+  restart_policy:
+    condition: any
+    delay: 10s
+
+services:
+  rabbitmq1:
+    <<: *rabbitmq
+    hostname: rabbitmq1
+    volumes: [rabbitmq1_data:/var/lib/rabbitmq]
+    deploy:
+      <<: *deploy
+      placement:
+        constraints: [node.hostname == node4]
+
+  rabbitmq2:
+    <<: *rabbitmq
+    hostname: rabbitmq2
+    volumes: [rabbitmq2_data:/var/lib/rabbitmq]
+    deploy:
+      <<: *deploy
+      placement:
+        constraints: [node.hostname == node5]
+
+  rabbitmq3:
+    <<: *rabbitmq
+    hostname: rabbitmq3
+    volumes: [rabbitmq3_data:/var/lib/rabbitmq]
+    deploy:
+      <<: *deploy
+      placement:
+        constraints: [node.hostname == node6]
+
+volumes:
+  rabbitmq1_data:
+  rabbitmq2_data:
+  rabbitmq3_data:
+
+networks:
+  drone-net:
+    external: true
+
+secrets:
+  rabbitmq_erlang_cookie:
+    external: true
+  rabbitmq_user:
+    external: true
+  rabbitmq_password:
+    external: true
+
+configs:
+  rabbitmq_cluster_conf:
+    file: ./rabbitmq-cluster.conf
