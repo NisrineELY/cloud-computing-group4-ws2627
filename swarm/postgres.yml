@@ -1,0 +1,107 @@
+# PostgreSQL primary (Pi 4, SSD) + streaming replica (node7). Deploy: docker stack deploy -c postgres.yml db
+version: "3.8"
+
+x-pg-secrets: &pgsecrets
+  - postgres_user
+  - postgres_password
+  - postgres_db
+  - postgres_replication_password
+
+services:
+  postgres:
+    image: postgres:17
+    hostname: postgres
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/postgres_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_DB_FILE: /run/secrets/postgres_db
+    command: postgres -c shared_buffers=256MB -c max_connections=50 -c wal_keep_size=512MB
+    secrets: *pgsecrets
+    configs:
+      - source: pg_replication_init
+        target: /docker-entrypoint-initdb.d/000_replication.sh
+      - source: pg_schema
+        target: /docker-entrypoint-initdb.d/001_database.sql
+    volumes:
+      - /mnt/ssd/postgres:/var/lib/postgresql/data
+    networks: [drone-net]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    deploy:
+      endpoint_mode: dnsrr
+      resources:
+        limits:
+          memory: 1G
+      restart_policy:
+        condition: any
+        delay: 10s
+      placement:
+        constraints: [node.hostname == backendgroup4]
+
+  postgres-replica:
+    image: postgres:17
+    hostname: postgres-replica
+    secrets: *pgsecrets
+    entrypoint:
+      - bash
+      - -c
+      - |
+        set -e
+        mkdir -p "$$PGDATA"
+        chown postgres:postgres "$$PGDATA"
+        chmod 700 "$$PGDATA"
+        if [ ! -s "$$PGDATA/PG_VERSION" ]; then
+          PW="$$(cat /run/secrets/postgres_replication_password)"
+          until gosu postgres pg_basebackup -d "host=postgres user=replicator password=$$PW" -D "$$PGDATA" -R -X stream; do
+            echo "Primary not ready, retrying in 10 s"
+            rm -rf "$$PGDATA"/*
+            sleep 10
+          done
+        fi
+        exec gosu postgres postgres -c shared_buffers=96MB -c max_connections=50
+    volumes:
+      - replica_data:/var/lib/postgresql/data
+    networks: [drone-net]
+    healthcheck:
+      test: ["CMD", "pg_isready", "-h", "127.0.0.1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 120s
+    deploy:
+      endpoint_mode: dnsrr
+      resources:
+        limits:
+          memory: 384M
+      restart_policy:
+        condition: any
+        delay: 10s
+      placement:
+        constraints: [node.hostname == node7]
+
+volumes:
+  replica_data:
+
+networks:
+  drone-net:
+    external: true
+
+secrets:
+  postgres_user:
+    external: true
+  postgres_password:
+    external: true
+  postgres_db:
+    external: true
+  postgres_replication_password:
+    external: true
+
+configs:
+  pg_replication_init:
+    file: ./postgres-replication.sh
+  pg_schema:
+    file: ./database.sql
