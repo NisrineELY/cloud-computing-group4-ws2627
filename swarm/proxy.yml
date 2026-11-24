@@ -1,0 +1,36 @@
+# HTTPS entry point (Caddy) in front of the API. Deploy: docker stack deploy -c proxy.yml proxy
+version: "3.8"
+
+services:
+  caddy:
+    image: caddy:2.8
+    configs:
+      - source: caddyfile
+        target: /etc/caddy/Caddyfile
+    secrets: [tls_cert, tls_key]
+    ports:
+      - "8443:443"
+    networks: [drone-net]
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 128M
+      restart_policy:
+        condition: any
+        delay: 5s
+      placement:
+        max_replicas_per_node: 1
+        constraints: [node.role == worker]
+
+networks:
+  drone-net:
+    external: true
+
+secrets:
+  tls_cert: {external: true}
+  tls_key: {external: true}
+
+configs:
+  caddyfile:
+    file: ./Caddyfile

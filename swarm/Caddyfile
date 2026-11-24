@@ -1,0 +1,4 @@
+:443 {
+	tls /run/secrets/tls_cert /run/secrets/tls_key
+	reverse_proxy app_api:8000
+}
