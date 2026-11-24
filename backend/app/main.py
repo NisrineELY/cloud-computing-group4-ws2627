@@ -24,6 +24,7 @@ from fastapi import (
 )
 from fastapi.responses import FileResponse, Response
 from psycopg.rows import dict_row
+from app import broker
 
 
 app = FastAPI(
@@ -85,23 +86,7 @@ def s3_client():
 
 
 def publish_event(event: dict) -> None:
-    credentials = pika.PlainCredentials(
-        os.environ["RABBITMQ_USER"],
-        os.environ["RABBITMQ_PASSWORD"],
-    )
-
-    hosts = os.environ.get("RABBITMQ_HOSTS", "rabbitmq").split(",")
-    connection = pika.BlockingConnection([
-        pika.ConnectionParameters(
-            host=h.strip(),
-            credentials=credentials,
-            connection_attempts=2,
-            retry_delay=1,
-            blocked_connection_timeout=10,
-            heartbeat=30,
-        )
-        for h in hosts
-    ])
+    connection = broker.connect()
 
     try:
         channel = connection.channel()

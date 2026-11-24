@@ -6,6 +6,7 @@ import time
 
 import pika
 import psycopg
+from app import broker
 
 QUEUE = "drone.detections"
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -57,18 +58,7 @@ def run():
     while True:
         connection = None
         try:
-            credentials = pika.PlainCredentials(
-                os.environ["RABBITMQ_USER"], os.environ["RABBITMQ_PASSWORD"]
-            )
-            hosts = os.environ.get("RABBITMQ_HOSTS", "rabbitmq").split(",")
-            connection = pika.BlockingConnection([
-                pika.ConnectionParameters(
-                    host=h.strip(), credentials=credentials,
-                    heartbeat=30, blocked_connection_timeout=10,
-                    connection_attempts=2, retry_delay=2,
-                )
-                for h in hosts
-            ])
+            connection = broker.connect()
             channel = connection.channel()
             channel.queue_declare(queue=QUEUE, durable=True)
             channel.basic_qos(prefetch_count=1)
