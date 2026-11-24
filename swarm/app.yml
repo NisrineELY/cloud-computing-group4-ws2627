@@ -1,0 +1,70 @@
+# API + worker (Docker Swarm). Deploy: docker stack deploy -c app.yml app
+version: "3.8"
+
+x-app: &app
+  image: 127.0.0.1:5000/drone-backend:2
+  # Turns every attached secret into an environment variable (api_key -> API_KEY), then starts the program
+  entrypoint:
+    - sh
+    - -c
+    - 'for f in /run/secrets/*; do export "$$(basename $$f | tr a-z A-Z)=$$(cat $$f)"; done; exec "$$@"'
+    - --
+  environment:
+    RABBITMQ_HOSTS: rabbitmq1,rabbitmq2,rabbitmq3
+    S3_BUCKET: drone-media
+  networks: [drone-net]
+
+services:
+  api:
+    <<: *app
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    secrets: [api_key, rabbitmq_user, rabbitmq_password, postgres_user, postgres_password, postgres_db, s3_access_key, s3_secret_key]
+    ports:
+      - "8001:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 256M
+      restart_policy:
+        condition: any
+        delay: 5s
+      placement:
+        max_replicas_per_node: 1
+        constraints: [node.role == worker]
+
+  worker:
+    <<: *app
+    command: ["python", "-m", "app.worker"]
+    secrets: [rabbitmq_user, rabbitmq_password, postgres_user, postgres_password, postgres_db]
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          memory: 192M
+      restart_policy:
+        condition: any
+        delay: 5s
+      placement:
+        max_replicas_per_node: 1
+        constraints: [node.role == worker]
+
+networks:
+  drone-net:
+    external: true
+
+secrets:
+  api_key: {external: true}
+  rabbitmq_user: {external: true}
+  rabbitmq_password: {external: true}
+  postgres_user: {external: true}
+  postgres_password: {external: true}
+  postgres_db: {external: true}
+  s3_access_key: {external: true}
+  s3_secret_key: {external: true}
