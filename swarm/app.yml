@@ -20,7 +20,7 @@ services:
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
     secrets: [api_key, rabbitmq_user, rabbitmq_password, postgres_user, postgres_password, postgres_db, s3_access_key, s3_secret_key]
     ports:
-      - "8001:8000"
+      - "8000:8000"
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=3)"]
       interval: 20s
