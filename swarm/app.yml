@@ -2,7 +2,7 @@
 version: "3.8"
 
 x-app: &app
-  image: 127.0.0.1:5000/drone-backend:2
+  image: 127.0.0.1:5000/drone-backend:3
   # Turns every attached secret into an environment variable (api_key -> API_KEY), then starts the program
   entrypoint:
     - sh
