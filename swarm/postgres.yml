@@ -9,7 +9,7 @@ x-pg-secrets: &pgsecrets
 
 services:
   postgres:
-    image: postgres:17
+    image: postgres:17@sha256:223efeb196329b55b3b9a13db144956411dbc18e727e59f681c3e0aede6475cf
     hostname: postgres
     environment:
       POSTGRES_USER_FILE: /run/secrets/postgres_user
@@ -43,7 +43,7 @@ services:
         constraints: [node.hostname == backendgroup4]
 
   postgres-replica:
-    image: postgres:17
+    image: postgres:17@sha256:223efeb196329b55b3b9a13db144956411dbc18e727e59f681c3e0aede6475cf
     hostname: postgres-replica
     secrets: *pgsecrets
     entrypoint:
