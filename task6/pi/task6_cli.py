@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-task6_cli.py - talk to the task6 pan-tilt firmware (ESP32-C6) over USB serial.
+task6_cli.py - talk to the task6 pan-tilt firmware (Raspberry Pi Pico 2 W) over USB serial.
 
 Runs on a laptop now, and later on the Raspberry Pi 5.
 
@@ -10,8 +10,10 @@ Usage:
   python task6_cli.py --port COM5 --selftest     # scripted hardware check, saves a log
   python task6_cli.py --sim                      # interactive, no hardware (simulator)
   python task6_cli.py --sim --selftest           # test the whole flow without hardware
+  python task6_cli.py --port COM5 --pattern      # aim the laser at a list of directions
+  python task6_cli.py --port COM5 --pattern my_points.csv --dwell 2
 
-Interactive commands are sent as-is (PING, PAN 90, MOVE 90 30, LASER ON, PARK, ...).
+Interactive commands are sent as-is (PING, PAN 103, MOVE 103 90, LASER ON, PARK, ...).
 While the console is open, a heartbeat PING is sent every 300 ms so the firmware
 watchdog does not switch the laser off. Type 'quit' to exit (sends PARK first).
 """
@@ -28,10 +30,12 @@ HEARTBEAT_S = 0.3
 class SimDevice:
     """Minimal software stand-in for the firmware, same text protocol."""
 
-    TILT_MAX = 60.0
+    PAN_MIN, PAN_MAX, PAN_PARK = 5.0, 175.0, 103.0
+    TILT_MIN, TILT_MAX, TILT_PARK = 78.0, 165.0, 78.0
+    TILT_ZENITH, TILT_HORIZON, PAN_AHEAD, PAN_DIR = 78.0, 165.0, 103.0, 1.0
 
     def __init__(self):
-        self.pan, self.tilt, self.laser = 90.0, 20.0, False
+        self.pan, self.tilt, self.laser = self.PAN_PARK, self.TILT_PARK, False
         self._out = []
         self._lock = threading.Lock()
         self._out.append("task6 pan-tilt ready (SIMULATOR)")
@@ -53,17 +57,26 @@ class SimDevice:
             if t[0] == "PING":
                 self._reply("PONG")
             elif t[0] == "PAN" and len(t) == 2:
-                self.pan = clamp(float(t[1]), 0, 180); self._reply(f"OK PAN {self.pan:.1f}")
+                self.pan = clamp(float(t[1]), self.PAN_MIN, self.PAN_MAX); self._reply(f"OK PAN {self.pan:.1f}")
             elif t[0] == "TILT" and len(t) == 2:
-                self.tilt = clamp(float(t[1]), 0, self.TILT_MAX); self._reply(f"OK TILT {self.tilt:.1f}")
+                self.tilt = clamp(float(t[1]), self.TILT_MIN, self.TILT_MAX); self._reply(f"OK TILT {self.tilt:.1f}")
             elif t[0] == "MOVE" and len(t) == 3:
-                self.pan = clamp(float(t[1]), 0, 180)
-                self.tilt = clamp(float(t[2]), 0, self.TILT_MAX)
+                self.pan = clamp(float(t[1]), self.PAN_MIN, self.PAN_MAX)
+                self.tilt = clamp(float(t[2]), self.TILT_MIN, self.TILT_MAX)
                 self._reply(f"OK MOVE {self.pan:.1f} {self.tilt:.1f}")
+            elif t[0] == "AIM" and len(t) == 3:
+                az, el = float(t[1]), max(0.0, min(90.0, float(t[2])))
+                self.pan = clamp(self.PAN_AHEAD + self.PAN_DIR * az, self.PAN_MIN, self.PAN_MAX)
+                self.tilt = clamp(self.TILT_HORIZON + el / 90 * (self.TILT_ZENITH - self.TILT_HORIZON),
+                                  self.TILT_MIN, self.TILT_MAX)
+                az = (self.pan - self.PAN_AHEAD) / self.PAN_DIR
+                el = (self.tilt - self.TILT_HORIZON) / (self.TILT_ZENITH - self.TILT_HORIZON) * 90
+                az, el = round(az, 1) + 0.0, round(el, 1) + 0.0   # no "-0.0"
+                self._reply(f"OK AIM {az:.1f} {el:.1f} pan={self.pan:.1f} tilt={self.tilt:.1f}")
             elif t[0] == "LASER" and len(t) == 2 and t[1] in ("ON", "OFF"):
                 self.laser = t[1] == "ON"; self._reply(f"OK LASER {t[1]}")
             elif t[0] == "PARK":
-                self.laser, self.pan, self.tilt = False, 90.0, 20.0; self._reply("OK PARK")
+                self.laser, self.pan, self.tilt = False, self.PAN_PARK, self.TILT_PARK; self._reply("OK PARK")
             elif t[0] == "SWEEP":
                 self.laser = False; self._reply("OK SWEEP")
             elif t[0] == "STATUS":
@@ -161,15 +174,20 @@ def selftest(link, is_sim):
         ("PING",          "PONG",        "board answers"),
         ("STATUS",        "STATUS",      "status report"),
         ("WD 1000",       "OK WD 1000",  "watchdog set to 1 s"),
-        ("MOVE 90 20",    "OK MOVE",     "centre position"),
-        ("PAN 45",        "OK PAN 45",   "pan left"),
-        ("PAN 135",       "OK PAN 135",  "pan right"),
-        ("TILT 50",       "OK TILT 50",  "tilt down/up within limit"),
-        ("TILT 90",       "OK TILT 60",  "SAFETY: tilt 90 must be clamped to 60"),
+        ("MOVE 103 78",   "OK MOVE",     "park position (straight up)"),
+        ("PAN 60",        "OK PAN 60",   "pan one way"),
+        ("PAN 140",       "OK PAN 140",  "pan other way"),
+        ("TILT 95",       "OK TILT 95",  "tilt forward within limit"),
+        ("TILT 30",       "OK TILT 78",  "SAFETY: tilt 30 must be clamped to 78"),
+        ("TILT 179",      "OK TILT 165", "SAFETY: tilt 179 clamped to 165 (horizontal)"),
+        ("AIM 0 0",       "OK AIM 0.0 0.0 pan=103.0 tilt=165.0", "aim straight ahead, horizontal"),
+        ("AIM 0 90",      "OK AIM 0.0 90.0 pan=103.0 tilt=78.0", "aim straight up"),
+        ("AIM 20 -10",    "OK AIM 20.0 0.0",                     "SAFETY: negative elevation clamped to 0"),
         ("LASER ON",      "OK LASER ON", "laser on"),
         ("LASER OFF",     "OK LASER OFF","laser off"),
         ("FOO",           "ERR",         "bad command is rejected"),
         ("PARK",          "OK PARK",     "park"),
+        ("WD 5000",       "OK WD 5000",  "restore 5 s watchdog"),
     ]
     log, ok_all = [], True
     print("\n=== task6 self-test ===")
@@ -200,6 +218,42 @@ def selftest(link, is_sim):
     return ok_all, log
 
 
+DEFAULT_PATTERN = [  # (azimuth, elevation) in degrees; 0/0 = straight ahead, horizontal
+    (0, 10), (-30, 10), (-30, 30), (0, 30), (30, 30), (30, 10), (0, 10), (0, 45),
+]
+
+
+def load_pattern(path):
+    """CSV lines 'az,el' (header and # comments allowed)."""
+    points = []
+    for line in pathlib.Path(path).read_text().splitlines():
+        line = line.split("#")[0].strip()
+        if not line or line[0].isalpha():
+            continue
+        az, el = (float(v) for v in line.replace(";", ",").split(",")[:2])
+        points.append((az, el))
+    return points
+
+
+def run_pattern(link, points, dwell, is_sim):
+    """Aim at each direction, laser on while dwelling there, laser off while moving."""
+    print(f"\n=== task6 pattern: {len(points)} points, {dwell:.1f} s each ===")
+    log = []
+    for i, (az, el) in enumerate(points, 1):
+        link.ask("LASER OFF", "OK LASER")
+        reply, ms = link.ask(f"AIM {az:g} {el:g}", "OK AIM")
+        time.sleep(0.05 if is_sim else 0.8)          # let the servos arrive
+        link.ask("LASER ON", "OK LASER")
+        row = f"{i:>2}/{len(points)}  az={az:6.1f} el={el:5.1f}  -> {reply}"
+        print(row)
+        log.append(row)
+        time.sleep(0.05 if is_sim else dwell)
+    link.ask("LASER OFF", "OK LASER")
+    link.ask("PARK", "OK PARK")
+    print("=== pattern done, parked ===\n")
+    return log
+
+
 def save_log(log, ok_all, is_sim):
     out_dir = pathlib.Path(__file__).resolve().parent.parent / "docs" / "test-logs"
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -217,6 +271,9 @@ def main():
     ap.add_argument("--sim", action="store_true", help="use the software simulator")
     ap.add_argument("--selftest", action="store_true", help="run the scripted check")
     ap.add_argument("--list", action="store_true", help="list serial ports")
+    ap.add_argument("--pattern", nargs="?", const="default", metavar="CSV",
+                    help="aim at a list of az,el points (default pattern if no file given)")
+    ap.add_argument("--dwell", type=float, default=2.0, help="seconds per pattern point")
     args = ap.parse_args()
 
     if args.list:
@@ -237,11 +294,15 @@ def main():
 
     link = Link(dev)
     try:
+        if args.pattern:
+            pts = DEFAULT_PATTERN if args.pattern == "default" else load_pattern(args.pattern)
+            run_pattern(link, pts, args.dwell, args.sim)
+            return
         if args.selftest:
             ok_all, log = selftest(link, args.sim)
             save_log(log, ok_all, args.sim)
             return
-        print("Connected. Type commands (PING, MOVE 90 30, LASER ON, PARK, ...), 'quit' to exit.")
+        print("Connected. Type commands (PING, MOVE 103 90, LASER ON, PARK, ...), 'quit' to exit.")
         while True:
             cmd = input("> ").strip()
             if cmd.lower() in ("quit", "exit"):
