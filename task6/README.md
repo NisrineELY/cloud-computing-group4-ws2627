@@ -15,7 +15,7 @@ camera and, optionally, the table-tennis-ball countermeasure demonstrator.
 Overview webcams ──> Detection (Task 2, Pi 5) ──> task6 controller (Python, Pi 5)
                                                         │ USB serial
                                                         v
-                                               ESP32-C6 firmware ──> pan/tilt servos + laser
+                                           Pico 2 W firmware ──> pan/tilt servos + laser
                                                         │
                         MQTT (status/commands) <────────┘  (via the Task 3 backend)
 ```
@@ -24,37 +24,48 @@ Overview webcams ──> Detection (Task 2, Pi 5) ──> task6 controller (Pyth
 
 | Folder      | Contents                                              |
 |-------------|-------------------------------------------------------|
-| `firmware/` | ESP32-C6 code (servo control, laser, serial protocol) |
+| `firmware/` | Raspberry Pi Pico 2 W code (servos, laser, serial protocol) |
 | `pi/`       | Python controller running on the Raspberry Pi 5       |
 | `config/`   | Example configuration (copy and adapt locally)        |
 | `docs/`     | Design notes, experiments, measurements, results      |
 
 ## Hardware (laser stage)
 
-- ESP32-C6 microcontroller
-- Pan-tilt bracket with 2 servos
+- Raspberry Pi Pico 2 W microcontroller (from the team case)
+- 2x Miuzei MS18 micro servo 9g (from the team case)
+- Pan-tilt bracket
 - Laser module, Class 1/2 (≤ 1 mW)
-- Separate 5 V supply for the servos (shared ground with the ESP32)
+- 5 V for the servos: USB VBUS for first tests, separate supply (shared ground) later
 
 ## Safety
 
-- The laser is used **indoors only**, aimed at a wall or target, never at the sky or at people.
-- The firmware enforces a maximum tilt angle so the laser cannot point upward.
+- The laser (Class 2, ≤ 1 mW) is used **indoors only** and never switched on outdoors or aimed at people.
+- The firmware hard-limits tilt to ≥ 78° (servo angle); below that the servos collide and overheat.
 - If the controller stops sending commands, a watchdog switches the laser off and parks the mount.
 
 ## Setup
 
-_TODO: wiring diagram, firmware flashing steps, Python environment setup._
+- Firmware: `firmware/task6_pan_tilt/` (Arduino IDE 2, Pico core by Earle Philhower, board *Raspberry Pi Pico 2W*)
+- Controller: `pip install -r pi/requirements.txt`
+- Wiring and first lab test: see [docs/lab-session-prep.md](docs/lab-session-prep.md)
+- Protocol: see [docs/serial-protocol.md](docs/serial-protocol.md)
 
 ## How to run
 
-_TODO_
+```bash
+python pi/task6_cli.py --sim --selftest          # no hardware: simulator self-test
+python pi/task6_cli.py --list                    # list serial ports
+python pi/task6_cli.py --port COM5               # interactive console
+python pi/task6_cli.py --port COM5 --selftest    # hardware self-test, log in docs/test-logs/
+python pi/task6_cli.py --port COM5 --pattern     # aim the laser at a set of directions
+python pi/task6_cli.py --port COM5 --pattern config/pattern-example.csv --dwell 3
+```
 
 ## Status
 
 - [ ] Hardware ordered
-- [ ] Firmware: servo sweep
-- [ ] Firmware: serial commands (pan, tilt, laser on/off)
-- [ ] Safety: tilt limit + watchdog
-- [ ] Pi controller: send commands over serial
+- [x] Firmware written: servo control, serial commands, laser on/off (compiles for Pico 2 W, not yet tested on hardware)
+- [x] Safety in firmware: tilt limit + watchdog (not yet tested on hardware)
+- [x] Controller console with simulator and self-test
+- [ ] First hardware test in the lab
 - [ ] Calibration and pointing-accuracy measurement

@@ -10,17 +10,22 @@ This folder is **Task 6: Automatic Camera Control and Object Tracking**, owned b
 - Always refer to this component as **task6** (folder, branch names, commit prefixes, docs).
 
 ## Current stage
-Laser stage: a pan-tilt mount with a low-power laser, driven by an ESP32-C6 over USB serial,
+Laser stage: a pan-tilt mount with a low-power laser (LED for now), driven by a Raspberry Pi
+Pico 2 W over USB serial,
 controlled by Python on a Raspberry Pi 5 (developed on a laptop first).
 Later: tracking camera on the mount, closed-loop visual tracking, optional ping-pong launcher.
 
 ## Tech
-- Firmware: ESP32-C6, Arduino framework (PlatformIO or Arduino IDE).
+- Firmware: Raspberry Pi Pico 2 W, Arduino IDE with the Earle Philhower Pico core, Servo library.
+- Servos: 2x Miuzei MS18 micro servo 9g. Pins: pan GP14, tilt GP15, laser/LED GP16.
+- Serial protocol: see docs/serial-protocol.md. Simulator + self-test: pi/task6_cli.py.
 - Controller: Python 3 on Raspberry Pi 5 (pyserial; MQTT later via the Task 3 broker).
 - Overview cameras: Logitech office webcams (likely Brio 500), fixed, not moving.
 
 ## Hard safety rules (never remove or weaken)
-- Firmware enforces a maximum tilt angle so the laser can never point at the sky.
+- Tilt is hard-limited to >= 78 (servo angle): lower values crash the tilt servo into the pan
+  servo and stall/overheat it. Never lower TILT_MIN_DEG.
+- Laser is used indoors only (Class 2, <= 1 mW). The mount rests pointing straight up.
 - Watchdog: if no valid command arrives within a timeout, laser OFF and mount parks.
 - Laser defaults to OFF at boot and on any error.
 

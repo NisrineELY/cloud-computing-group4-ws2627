@@ -1,0 +1,6 @@
+# az,el in degrees. az 0 = straight ahead, positive = right. el 0 = horizontal, 90 = straight up
+az,el
+0,10
+-40,20
+40,20
+0,60

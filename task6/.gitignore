@@ -1,7 +1,0 @@
-# task6 local and build files
-config/local.yaml
-.pio/
-build/
-__pycache__/
-*.pyc
-.venv/
